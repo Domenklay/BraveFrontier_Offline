@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "units": [
+    {"id":"flame_guard","name":"Страж углей","element":"fire","hp":210,"atk":64,"def":22},
+    {"id":"tide_mage","name":"Приливная чародейка","element":"water","hp":175,"atk":72,"def":14},
+    {"id":"grove_keeper","name":"Хранитель чащи","element":"earth","hp":245,"atk":48,"def":30},
+    {"id":"thunder_rogue","name":"Грозовой следопыт","element":"thunder","hp":170,"atk":79,"def":12},
+    {"id":"sun_knight","name":"Солнечный рыцарь","element":"light","hp":195,"atk":66,"def":20},
+    {"id":"dusk_witch","name":"Ведьма сумерек","element":"dark","hp":165,"atk":83,"def":10}
+  ],
+  "modes": [
+    {"id":"story","name":"История — Забытый тракт","description":"Три волны с постепенным усилением.","waves":3,"enemyHp":200,"enemyAtk":36,"element":"earth","reward":150},
+    {"id":"survival","name":"Испытание — Пять волн","description":"Пять последовательных сражений.","waves":5,"enemyHp":230,"enemyAtk":42,"element":"water","reward":300},
+    {"id":"boss","name":"Босс — Страж руин","description":"Один усиленный противник.","waves":1,"enemyHp":980,"enemyAtk":65,"element":"dark","reward":250}
+  ]
+}

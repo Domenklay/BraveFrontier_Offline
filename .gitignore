@@ -1,0 +1,13 @@
+/.gradle/
+/build/
+/app/build/
+/local.properties
+*.keystore
+*.jks
+.DS_Store
+*.apk
+*.aab
+game_content/
+mst/
+decoded_tables/
+licensed_assets/
