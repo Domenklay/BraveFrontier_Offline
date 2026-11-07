@@ -66,6 +66,19 @@ def main():
     # notice URL host, which must never point outside the phone.
     config_text=config_text.replace("http://ios21900.bfww.gumi.sg/pages/versioninfo",
                                     "http://127.0.0.1:9960/pages/versioninfo")
+    # The upstream DLS response determines *all subsequent* client hosts.
+    # Pin both game and resources explicitly rather than relying on a
+    # fallback derived from a listener or environment variable.
+    server_marker = '"server": {'
+    if server_marker not in config_text:
+        parser.error("Cannot locate upstream DLS server configuration")
+    if '"public_host"' in config_text or '"resource_host"' in config_text:
+        parser.error("Review changed upstream host configuration before offline packing")
+    config_text = config_text.replace(
+        server_marker,
+        server_marker + '\\n                    "public_host": "127.0.0.1:9960",'
+                      + '\\n                    "resource_host": "127.0.0.1:9960",', 1)
+
     (root/"config.json").write_text(config_text,encoding="utf-8")
     copy_dir(server/"system",root/"system")
     copy_dir(archive,root/"archive")
