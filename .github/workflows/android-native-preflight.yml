@@ -4,6 +4,10 @@ on:
     branches: [feature/embedded-server-bootstrap]
     paths:
       - '.github/workflows/android-native-preflight.yml'
+      - 'tools/sync_upstream.py'
+      - 'tools/build_android_native.py'
+      - 'upstream.lock.json'
+      - 'android-host/native/**'
   workflow_dispatch:
 
 jobs:
