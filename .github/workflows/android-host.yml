@@ -2,6 +2,11 @@ name: Verify embedded Android server host
 on:
   push:
     branches: [main, feature/embedded-server-bootstrap]
+    paths:
+      - '.github/workflows/android-host.yml'
+      - 'android-host/**'
+      - 'tools/**'
+      - 'upstream.lock.json'
   workflow_dispatch:
 jobs:
   android-host:
