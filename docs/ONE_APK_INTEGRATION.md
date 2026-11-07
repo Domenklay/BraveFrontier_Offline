@@ -1,6 +1,6 @@
 # Попытка упаковки оригинального Brave Frontier + готового сервера в один APK
 
-**Статус: экспериментальная интеграция в ветке `feature/embedded-server-bootstrap`.** Реальный оригинальный APK с встроенным сервером пока не собран и не протестирован.
+**Статус: экспериментальная интеграция в `main` и ветке `feature/embedded-server-bootstrap`.** Реальный оригинальный APK с встроенным сервером пока не собран и не протестирован.
 
 ## Что сделано
 
@@ -33,7 +33,7 @@ sg.gumi.bravefrontier (тот же APK, оригинальная package identit
 
 ### Известные недоработки
 
-- C++23 сервер ещё не проверен на успешную NDK сборку и загрузку в Android.
+- C++23 сервер ещё не проверен на успешную NDK сборку и загрузку в Android. Первая реальная CMake-конфигурация выявила некорректные выражения переменных в JNI CMakeLists.txt; ошибка исправлена, выполняется повторная проверка.
 - Новый launcher ожидает HTTP 200 и настоящий JSON `/dls` перед открытием оригинальной Activity. Нужно проверить, не отправляет ли оригинальный `Application.onCreate()` сетевые запросы ещё до этой Activity, и протестировать загрузку больших ресурсов.
 - Не проверены все загрузочные файлы, декодированные MST и работа клиентских экранов.
 - Отдельно надо проверить вызовы Android cleartext/loopback, многопроцессность, перезапуск, память, Android 12–16 ограничения на фоновые службы.
@@ -43,16 +43,21 @@ sg.gumi.bravefrontier (тот же APK, оригинальная package identit
 
 ## Сборка при наличии личной совместимой копии клиента и игровых ресурсов
 
-Необходимы: Git, Python 3, JDK 17, CMake 4+, Ninja, Rust, Android SDK/NDK, vcpkg, Gradle 8.10.2, apktool, d8, zipalign, apksigner, свой keystore. Ресурсы клиентского APK и правовой статус их использования проверяются отдельно.
+Входной файл BF Revive V20 **уже получен и проанализирован**. Для дальнейшей сборки необходимы: Git, Python 3, JDK 17, CMake 4+, Ninja, Rust, Android SDK/NDK, vcpkg, Gradle 8.10.2, apktool, d8, zipalign, apksigner, свой keystore. Ресурсы клиентского APK и правовой статус их использования проверяются отдельно.
 
 ```bash
 python tools/sync_upstream.py
-python tools/check_client.py /private/BraveFrontier_2.19.6.apk
 
-# Патчер берётся именно из исходного проекта, с его инструкцией по подписи:
-python upstream/server/tools/patch_apk.py \
-  --apk /private/BraveFrontier_2.19.6.apk \
-  --out build/patched-client.apk --host 127.0.0.1:9960
+# ВАРИАНТ A: присланный BF Revive V20 (точная byte-checked версия).
+python tools/patch_bfrevive_v20.py /private/bfrevive-V20.apk \
+  --unsigned-apk build/patched-client.apk
+
+# ВАРИАНТ B: чистый оригинальный клиент, с другим SHA256
+# (не использовать для фанатского APK):
+# python tools/check_client.py /private/BraveFrontier_2.19.6.apk
+# python upstream/server/tools/patch_apk.py \
+#   --apk /private/BraveFrontier_2.19.6.apk \
+#   --out build/patched-client.apk --host 127.0.0.1:9960
 
 # Здесь нужны отдельно сохранённые оригинальные content/mst и decoded tables.
 python tools/stage_payload.py \
