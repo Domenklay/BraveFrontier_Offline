@@ -25,6 +25,12 @@ class StagingTests(unittest.TestCase):
             mst=root/"decoded"
             mst.mkdir()
             (mst/"unit_mst.json").write_text("[]")
+            cache=upstream/"server"/"server"/"gimuserver"/"drogon"/"ServerCache.cpp"
+            cache.parent.mkdir(parents=True,exist_ok=True)
+            names=["unit_mst.json"]+[f"test_{i}_mst.json" for i in range(80)]
+            cache.write_text("\\n".join('forge::LoadMst<Table>(mstRoot, "'+n+'")' for n in names))
+            for n in names:
+                (mst/n).write_text("[]")
             content=root/"downloads"
             (content/"content").mkdir(parents=True)
             (content/"mst").mkdir()
