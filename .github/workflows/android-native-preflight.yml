@@ -1,0 +1,39 @@
+name: Experiment with Android NDK upstream-server port
+on:
+  push:
+    branches: [feature/embedded-server-bootstrap]
+    paths:
+      - '.github/workflows/android-native-preflight.yml'
+  workflow_dispatch:
+
+jobs:
+  configure-android-native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      VCPKG_DISABLE_METRICS: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+      - name: Install Android NDK
+        run: sdkmanager 'ndk;27.2.12479018'
+      - name: Install CMake 4 and Ninja
+        run: |
+          python3 -m pip install --user cmake==4.1.2 ninja
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install vcpkg toolchain
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git "$RUNNER_TEMP/vcpkg"
+          "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+      - name: Fetch pinned original server source and curated data
+        run: python3 tools/sync_upstream.py
+      - name: Attempt to configure original C++23 server for Android arm64
+        env:
+          VCPKG_ROOT: ${{ runner.temp }}/vcpkg
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
+        run: python3 tools/build_android_native.py --configure-only
