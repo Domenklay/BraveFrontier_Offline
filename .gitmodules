@@ -1,0 +1,6 @@
+[submodule "vendor/bf-private-server"]
+    path = vendor/bf-private-server
+    url = https://github.com/joppe2001/bf-private-server.git
+[submodule "vendor/bf-private-server-data"]
+    path = vendor/bf-private-server-data
+    url = https://github.com/joppe2001/bf-private-server-data.git
