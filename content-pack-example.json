@@ -1,9 +1,0 @@
-{
-  "schema": 1,
-  "units": [
-    {"id":"my_hero","name":"Мой герой","element":"light","hp":220,"atk":70,"def":22}
-  ],
-  "modes": [
-    {"id":"my_dungeon","name":"Моё подземелье","description":"Пользовательский режим","waves":3,"enemyHp":300,"enemyAtk":40,"element":"dark","reward":180}
-  ]
-}

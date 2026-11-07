@@ -1,0 +1,16 @@
+{
+  "auditDate": "2026-11-07",
+  "server": {
+    "repository": "https://github.com/joppe2001/bf-private-server.git",
+    "commit": "f9d0b5a324ecb517e257d8d0c39413840caa851b",
+    "license": "AGPL-3.0"
+  },
+  "data": {
+    "repository": "https://github.com/joppe2001/bf-private-server-data.git",
+    "commit": "480a8e4f78e13b1501ca77adc5b50090a8405983"
+  },
+  "client": {
+    "version": "2.19.6",
+    "arm64LibgameSha256": "076c8ed12e84d122938255c1530a4d4b1853d876b5928dd0c2389538fc4cad95"
+  }
+}
