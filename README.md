@@ -4,6 +4,21 @@
 
 **Это НЕ новый клон Brave Frontier.** Ранее сделанный независимый прототип признан неподходящим и вынесен в архивную ветку [archive/independent-prototype-v0.1.0](https://github.com/Domenklay/BraveFrontier_Offline/tree/archive/independent-prototype-v0.1.0). APK из старого релиза не является оригинальной игрой.
 
+
+## Эксперимент: встроенный сервер в тот же APK
+
+Рабочая ветка: `feature/embedded-server-bootstrap`.
+
+- `vendor/bf-private-server` и `vendor/bf-private-server-data` — **настоящие upstream-проекты** в виде зафиксированных Git-подмодулей. Их можно открыть в GitHub или получить командой `git clone --recurse-submodules`.
+- `android-host/` — модуль Android-службы в отдельном процессе `:bfserver` и JNI-адаптер, который должен запускать существующий C++ сервер. Это **не новый игровой клиент**.
+- `tools/build_android_native.py` — экспериментальный перенос upstream сервера в ARM64 .so.
+- `tools/stage_payload.py` — локальная подготовка клиентских данных (не включены в Git).
+- `tools/inject_host.py` — экспериментальное внедрение службы, native .so и контента в модифицированный **оригинальный** APK с повторной подписью.
+
+Подробно: [что реально есть в исходниках](docs/SOURCE_INVENTORY.md), [архитектура одного APK и порядок сборки](docs/ONE_APK_INTEGRATION.md).
+
+**Подтверждено:** успешно компилируется Java-библиотека службы и выполняются тесты Python-инструментов. **Пока не подтверждено:** native NDK сборка сервера, наличие полного клиентского пакета, запуск оригинальной Brave Frontier на одном телефоне в авиарежиме. Не выдавать Java-библиотеку за работающий игровой APK.
+
 ## Готовая основа
 
 - Исходный клиент: **Brave Frontier Global v2.19.6** (пользовательская оригинальная копия, в GitHub не публикуется).
