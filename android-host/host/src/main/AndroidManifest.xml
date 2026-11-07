@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- This manifest is for the bridge AAR; tools/inject_host.py
+         merges the provider/service into the ORIGINAL client APK. -->
+    <application>
+        <provider android:name="com.domenklay.bfoffline.OfflineBootstrapProvider"
+            android:exported="false"
+            android:authorities="com.domenklay.bfoffline.bootstrap"/>
+        <service android:name="com.domenklay.bfoffline.EmbeddedServerService"
+            android:exported="false"
+            android:process=":bfserver"/>
+    </application>
+</manifest>
