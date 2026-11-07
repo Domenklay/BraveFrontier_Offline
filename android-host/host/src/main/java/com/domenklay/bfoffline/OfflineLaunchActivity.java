@@ -14,6 +14,7 @@ import android.util.Log;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.io.InputStream;
+import java.io.File;
 
 /**
  * Launch gateway INSIDE the patched original APK. The game's own Activity is
@@ -57,6 +58,16 @@ public final class OfflineLaunchActivity extends Activity {
             // the first launch. Never send a request to an external host.
             final long deadline = SystemClock.elapsedRealtime() + 10L * 60L * 1000L;
             while (!destroyed && SystemClock.elapsedRealtime() < deadline) {
+                File bootError = new File(getFilesDir(), "bf_offline/.boot_error.txt");
+                if (bootError.isFile()) {
+                    runOnUiThread(() -> {
+                        if (!destroyed && !isFinishing())
+                            state.setText("Локальный сервер не запустился.\\n"
+                                + "Проверьте игровые таблицы и библиотеку сервера.\\n"
+                                + "Подробности: adb logcat | grep BF-Offline");
+                    });
+                    return;
+                }
                 if (isLocalServerReady()) {
                     runOnUiThread(() -> {
                         if (destroyed || isFinishing()) return;

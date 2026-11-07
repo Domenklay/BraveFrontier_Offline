@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Hosts joppe2001/bf-private-server in a DEDICATED Android process.
@@ -28,8 +30,10 @@ public final class EmbeddedServerService extends Service {
         super.onCreate();
         startInForegroundIfAllowed();
         worker = new Thread(() -> {
+            File root = new File(getFilesDir(), "bf_offline");
+            File failureFlag = new File(root, ".boot_error.txt");
+            if (failureFlag.isFile()) failureFlag.delete();
             try {
-                File root = new File(getFilesDir(), "bf_offline");
                 File config = AssetDeployer.deploy(getAssets(), root);
                 System.loadLibrary("bf_offline_server");
                 Log.i(TAG, "Launching existing C++ game server with " + config);
@@ -37,6 +41,14 @@ public final class EmbeddedServerService extends Service {
             } catch (Throwable e) {
                 // A missing library or MST is an actual error, never fake readiness.
                 Log.e(TAG, "Game-server boot failed (not running)", e);
+                if (root.isDirectory()) {
+                    try (FileOutputStream out = new FileOutputStream(failureFlag)) {
+                        out.write(("Ошибка локального сервера: " + e.getClass().getSimpleName()
+                                + ": " + e.getMessage()).getBytes(StandardCharsets.UTF_8));
+                    } catch (Exception ignored) {
+                        Log.w(TAG, "Could not save local boot diagnostic");
+                    }
+                }
                 stopSelf();
             }
         }, "bf-upstream-server");
