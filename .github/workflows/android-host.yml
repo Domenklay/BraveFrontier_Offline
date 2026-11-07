@@ -24,6 +24,8 @@ jobs:
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - name: Check Python builder syntax
         run: python3 -m compileall -q tools
+      - name: Test one-APK integration helpers
+        run: python3 -m unittest discover -s tools/tests -v
       - name: Compile bridge Android AAR (no native server yet)
         run: cd android-host && gradle --no-daemon :host:assembleRelease
       - name: Publish bridge AAR as build artifact
