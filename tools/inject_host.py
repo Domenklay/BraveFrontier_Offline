@@ -107,7 +107,7 @@ def validate_android_shared_library(path: Path) -> None:
     # Reject Linux x86_64 builds or arbitrary binaries before APK signing.
     with path.open("rb") as native:
         header = native.read(64)
-    if len(header) < 64 or header[:4] != b"\\x7fELF":
+    if len(header) < 64 or header[:4] != b"\x7fELF":
         raise RuntimeError("Native server is not an ELF shared library")
     if header[4] != 2 or header[5] != 1:
         raise RuntimeError("Native server must be little-endian ELF64")
