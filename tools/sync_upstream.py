@@ -16,11 +16,12 @@ def command(*argv, cwd=None, capture=False):
 def sync(name):
     info = LOCK[name]
     local = TARGET / name
-    if not local.exists():
+    is_new = not local.exists()
+    if is_new:
         command("git", "clone", "--no-checkout", info["repository"], str(local))
     if not (local / ".git").is_dir():
         raise RuntimeError(f"{local} is not a Git checkout; refusing to overwrite")
-    status = command("git", "status", "--porcelain", cwd=local, capture=True).stdout
+    status = "" if is_new else command("git", "status", "--porcelain", cwd=local, capture=True).stdout
     if status.strip():
         raise RuntimeError(f"{local} has uncommitted changes; refusing to overwrite")
     command("git", "fetch", "origin", info["commit"], cwd=local)
