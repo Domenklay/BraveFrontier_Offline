@@ -21,7 +21,8 @@ final class AssetDeployer {
         MessageDigest manifestDigest = MessageDigest.getInstance("SHA-256");
         String manifestText;
         try (InputStream input = assets.open(PREFIX + "manifest.tsv")) {
-            manifestText = readUtf8(input, 8 * 1024 * 1024);
+            // Full Brave Frontier content can have tens of thousands of files.
+            manifestText = readUtf8(input, 64 * 1024 * 1024);
         }
         String manifestHash = hex(manifestDigest.digest(
                 manifestText.getBytes(StandardCharsets.UTF_8)));
