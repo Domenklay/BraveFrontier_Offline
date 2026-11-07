@@ -5,6 +5,7 @@
 #include <string>
 #include <stdexcept>
 
+#include <gimuserver/App.hpp> // upstream packets/all.hpp, controllers, request types
 #include <gimuserver/db/MigrationManager.hpp>
 #include <gimuserver/drogon/GimuServer.hpp>
 #include <gimuserver/gme/common/BalanceSync.hpp>

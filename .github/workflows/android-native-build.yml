@@ -33,7 +33,7 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - uses: dtolnay/rust-toolchain@stable
       - name: Cache source dependencies and cross-built libraries
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: |
             .vcpkg-binary-cache
@@ -67,3 +67,12 @@ jobs:
           name: bf-original-server-android-arm64
           path: android-host/host/src/main/jniLibs/arm64-v8a/libbf_offline_server.so
           if-no-files-found: error
+      - name: Save Android cross-compiled dependencies for failure retries
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .vcpkg-binary-cache
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: bf-android-ndk27-vcpkg-${{ hashFiles('upstream.lock.json') }}-v1
