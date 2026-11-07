@@ -169,7 +169,7 @@ def main():
             jar.write_bytes(aar.read("classes.jar"))
         dexdir=temp/"host-dex"
         dexdir.mkdir()
-        run(args.d8,"--min-api","24","--lib",args.android_jar,
+        run(args.d8,"--min-api","26","--lib",args.android_jar,
             "--output",dexdir,jar)
         dexfiles=sorted(dexdir.glob("classes*.dex"))
         if not dexfiles:
