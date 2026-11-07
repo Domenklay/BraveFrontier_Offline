@@ -43,10 +43,10 @@ def main():
     # without changing their structure or any server/game logic.
     capture = WORK/"gimuserver"/"forge"/"Capture.cpp"
     source = capture.read_text(encoding="utf-8")
-    original_open = "namespace forge\\n{\\n\\nnamespace\\n{\\n\\nstruct RawRule"
-    patched_open = "namespace forge\\n{\\n\\nstruct RawRule"
+    original_open = "namespace forge\n{\n\nnamespace\n{\n\nstruct RawRule"
+    patched_open = "namespace forge\n{\n\nstruct RawRule"
     original_close = "struct CaptureOpts : glz::opts"
-    patched_close = "namespace\\n{\\n\\nstruct CaptureOpts : glz::opts"
+    patched_close = "namespace\n{\n\nstruct CaptureOpts : glz::opts"
     if source.count(original_open) != 1 or source.count(original_close) != 1:
         raise RuntimeError("Pinned upstream Capture.cpp layout changed")
     source = source.replace(original_open, patched_open, 1)
