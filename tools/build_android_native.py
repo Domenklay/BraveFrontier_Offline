@@ -45,8 +45,8 @@ def main():
     # The upstream has no C++20 modules. New CMake 4 enables module scanning for
     # C++23 targets and can select Ubuntu clang-scan-deps while Android NDK Clang
     # compiled the PCH, producing an incompatible-PCH toolchain error.
-    script=script.replace(anchor,anchor+"\\nset(CMAKE_POSITION_INDEPENDENT_CODE ON)"
-                          +"\\nset(CMAKE_CXX_SCAN_FOR_MODULES OFF)",1)
+    script=script.replace(anchor,anchor+"\nset(CMAKE_POSITION_INDEPENDENT_CODE ON)"
+                          +"\nset(CMAKE_CXX_SCAN_FOR_MODULES OFF)",1)
     # Preserve upstream's CMAKE_SOURCE_DIR (packet generator expects it).
     script+="\n# Android bridge (added to disposable source checkout)\n"
     script += 'add_subdirectory("{}" "${{CMAKE_BINARY_DIR}}/offline_bridge")\n'.format(BRIDGE.as_posix())
