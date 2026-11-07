@@ -16,6 +16,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -102,6 +103,18 @@ def add_manifest_hooks(manifest):
     doc.write(manifest,encoding="utf-8",xml_declaration=True)
     return package
 
+def validate_android_shared_library(path: Path) -> None:
+    # Reject Linux x86_64 builds or arbitrary binaries before APK signing.
+    with path.open("rb") as native:
+        header = native.read(64)
+    if len(header) < 64 or header[:4] != b"\\x7fELF":
+        raise RuntimeError("Native server is not an ELF shared library")
+    if header[4] != 2 or header[5] != 1:
+        raise RuntimeError("Native server must be little-endian ELF64")
+    kind, machine = struct.unpack_from("<HH", header, 16)
+    if kind != 3 or machine != 183:
+        raise RuntimeError("Native server is not an Android ARM64 shared object")
+
 def validate_patched(path):
     if not zipfile.is_zipfile(path): raise RuntimeError("Patched client is not an APK")
     with zipfile.ZipFile(path) as z:
@@ -138,6 +151,7 @@ def main():
         parser.error("Set BF_OFFLINE_KS_PASS environment variable; never put secrets in CLI or Git")
     if not str(args.output.resolve()).startswith(str(Path.cwd().resolve())):
         print("Note: writing outside current working directory")
+    validate_android_shared_library(args.native_lib)
     validate_patched(args.patched_apk)
     with tempfile.TemporaryDirectory(prefix="bf-apk-") as temporary:
         temp=Path(temporary)
