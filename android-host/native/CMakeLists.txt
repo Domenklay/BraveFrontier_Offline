@@ -6,6 +6,8 @@ if(NOT TARGET gimuserver)
 endif()
 
 add_library(bf_offline_server SHARED NativeServer.cpp)
+# JNI uses traditional headers, not C++ modules; disable Ninja dyndep scanning.
+set_property(TARGET bf_offline_server PROPERTY CXX_SCAN_FOR_MODULES OFF)
 # JNI TU imports generated packet headers through upstream App.hpp.
 add_dependencies(bf_offline_server pkgen_generate)
 target_compile_features(bf_offline_server PRIVATE cxx_std_23)
