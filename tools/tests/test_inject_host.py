@@ -1,12 +1,13 @@
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
+import struct
 from pathlib import Path
 from sys import path
 
 ROOT=Path(__file__).resolve().parents[2]
 path.insert(0,str(ROOT/"tools"))
-from inject_host import add_manifest_hooks, ANDROID, ATTR
+from inject_host import add_manifest_hooks, validate_android_shared_library, ANDROID, ATTR
 
 class ManifestInjectionTests(unittest.TestCase):
     def test_keeps_original_activity_and_adds_local_server(self):
@@ -45,6 +46,25 @@ class ManifestInjectionTests(unittest.TestCase):
             self.assertEqual(bridge.find("meta-data").get(ATTR("value")),
                              "sg.gumi.bravefrontier.AppActivity")
             self.assertIsNotNone(bridge.find("intent-filter"))
+
+class NativeLibraryValidationTests(unittest.TestCase):
+    def test_rejects_non_elf_and_wrong_cpu(self):
+        with tempfile.TemporaryDirectory() as folder:
+            candidate=Path(folder)/"server.so"
+            candidate.write_bytes(b"not a native library")
+            with self.assertRaisesRegex(RuntimeError, "ELF"):
+                validate_android_shared_library(candidate)
+            header=bytearray(64)
+            header[:4]=b"\x7fELF"
+            header[4]=2
+            header[5]=1
+            struct.pack_into("<HH",header,16,3,62) # x86_64
+            candidate.write_bytes(header)
+            with self.assertRaisesRegex(RuntimeError, "ARM64"):
+                validate_android_shared_library(candidate)
+            struct.pack_into("<HH",header,16,3,183) # AArch64
+            candidate.write_bytes(header)
+            validate_android_shared_library(candidate)
 
 if __name__=="__main__":
     unittest.main()
