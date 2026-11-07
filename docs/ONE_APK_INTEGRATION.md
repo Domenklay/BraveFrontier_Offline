@@ -4,7 +4,7 @@
 
 ## Что сделано
 
-1. `android-host/host/src/main/java/...` — Android-служба и bootstrap-provider, запускающие сервер на старте ОРИГИНАЛЬНОГО клиента.
+1. `android-host/host/src/main/java/...` — Android-служба, bootstrap-provider и стартовая Activity: сперва запускает настоящий localhost-сервер и ожидает его JSON-ответ на `/dls`, лишь затем открывает исходную Activity игры.
 2. `android-host/native/NativeServer.cpp` — JNI entry point, перенесённый по логике upstream `standalone_frontend/main.cpp`: работает с реальным Drogon, SQLite миграциями и балансом.
 3. `tools/build_android_native.py` — конфигурация порта существующего C++ сервера в `libbf_offline_server.so` для Android arm64, без переписывания серверной логики.
 4. `tools/stage_payload.py` — подготовка реальных существующих серверных данных, клиентских таблиц и ресурсов в файлы APK (ничего не скачивает и не подделывает).
@@ -14,7 +14,7 @@
 ## Поток запуска
 
 ```text
-sg.gumi.bravefrontier (оригинальная Activity)
+sg.gumi.bravefrontier (тот же APK, оригинальная package identity)
   -> OfflineBootstrapProvider.onCreate()
       -> startService(EmbeddedServerService) в процессе :bfserver
           -> распаковка bundled assets/bf-offline/* во внутреннюю files/bf_offline/
@@ -23,6 +23,9 @@ sg.gumi.bravefrontier (оригинальная Activity)
               -> настоящие маршруты Drogon: /dls, /bf/gme/action.php,
                  /mst, /content и другие
               -> app-private SQLite gme.sqlite
+  -> OfflineLaunchActivity (стартовый экран внутри исходного APK)
+      -> опрашивает НАСТОЯЩИЙ GET /dls, никаких имитированных ответов
+      -> после ответа открывает оригинальную Activity клиента
   -> оригинальный клиент обращается к 127.0.0.1:9960
 ```
 
@@ -31,7 +34,7 @@ sg.gumi.bravefrontier (оригинальная Activity)
 ### Известные недоработки
 
 - C++23 сервер ещё не проверен на успешную NDK сборку и загрузку в Android.
-- Провайдер стартует сервер рано, но ещё **не задерживает запрос /dls до готовности сервера** — требуется проверка и, если нужно, hook/повторная попытка подключения.
+- Новый launcher ожидает HTTP 200 и настоящий JSON `/dls` перед открытием оригинальной Activity. Нужно проверить, не отправляет ли оригинальный `Application.onCreate()` сетевые запросы ещё до этой Activity, и протестировать загрузку больших ресурсов.
 - Не проверены все загрузочные файлы, декодированные MST и работа клиентских экранов.
 - Отдельно надо проверить вызовы Android cleartext/loopback, многопроцессность, перезапуск, память, Android 12–16 ограничения на фоновые службы.
 - Извлечение нескольких ГБ данных в приватное хранилище может быть долгим и потребовать много свободного места. Один большой APK может упереться в ограничения установки; способ поставки будет зависеть от размера реального пакета.
