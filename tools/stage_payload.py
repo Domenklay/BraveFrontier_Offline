@@ -9,6 +9,7 @@ import hashlib
 from pathlib import Path
 import shutil
 import sys
+from audit_content import scan
 
 ROOT=Path(__file__).resolve().parents[1]
 UP=ROOT/"upstream"
@@ -42,6 +43,18 @@ def main():
         parser.error("Decoded master table unit_mst.json missing")
     if not (args.content_root/"content").is_dir() or not (args.content_root/"mst").is_dir():
         parser.error("Content root must contain content/ and mst/ directories")
+    # Refuse packages which cannot start the pinned upstream server.
+    # The upstream ServerCache.cpp uses many more tables than unit_mst.json.
+    report = scan(UP/"server"/"server"/"gimuserver"/"drogon"/"ServerCache.cpp",
+                  args.decoded_mst, args.content_root)
+    if not report["ready_for_server_boot"]:
+        missing = report["decoded_master_tables_missing"]
+        parser.error(f"Incomplete game resources: decoded MST "
+                     f"{report['decoded_master_tables_found']}/"
+                     f"{report['decoded_master_tables_expected']} present; "
+                     f"first missing: {missing[:8]}. "
+                     f"Run python tools/audit_content.py --decoded-mst PATH "
+                     f"--client-content PATH for full report.")
     config=server/"config.json"
     if not config.is_file():
         parser.error("Upstream config absent: run tools/sync_upstream.py")
