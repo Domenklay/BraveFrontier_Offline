@@ -37,6 +37,7 @@ class ManifestInjectionTests(unittest.TestCase):
             self.assertEqual(app.get(ATTR("usesCleartextTraffic")),"true")
             self.assertEqual(root.find("uses-permission").get(ATTR("name")),
                              "android.permission.INTERNET")
+            self.assertEqual(root.find("uses-sdk").get(ATTR("minSdkVersion")),"24")
             self.assertIsNone(app.find("activity").find("intent-filter"))
             bridge=app.findall("activity")[-1]
             self.assertEqual(bridge.get(ATTR("name")),
