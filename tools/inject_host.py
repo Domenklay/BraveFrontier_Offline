@@ -38,12 +38,13 @@ def add_manifest_hooks(manifest):
     package = root.attrib.get("package", "sg.gumi.bravefrontier")
     if not re.fullmatch(r"[a-zA-Z][a-zA-Z0-9_.]*",package):
         raise RuntimeError("Cannot determine original APK package name")
-    permission="android.permission.INTERNET"  # required for Android loopback sockets
     existing={p.get(ATTR("name")) for p in root.findall("uses-permission")}
-    if permission not in existing:
-        node=ET.Element("uses-permission")
-        node.set(ATTR("name"),permission)
-        root.insert(0,node)
+    for permission in ("android.permission.INTERNET",
+                       "android.permission.FOREGROUND_SERVICE"):
+        if permission not in existing:
+            node=ET.Element("uses-permission")
+            node.set(ATTR("name"),permission)
+            root.insert(0,node)
     application=root.find("application")
     if application is None: raise RuntimeError("Original APK manifest has no application")
     # The injected Android service requires API 24+; do not offer a broken
