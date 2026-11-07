@@ -16,7 +16,12 @@ class ManifestInjectionTests(unittest.TestCase):
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  package="sg.gumi.bravefrontier">
  <application android:label="Brave Frontier">
-  <activity android:name="sg.gumi.bravefrontier.AppActivity"/>
+  <activity android:name="sg.gumi.bravefrontier.AppActivity">
+    <intent-filter>
+     <action android:name="android.intent.action.MAIN"/>
+     <category android:name="android.intent.category.LAUNCHER"/>
+    </intent-filter>
+  </activity>
  </application>
 </manifest>""",encoding="utf-8")
             self.assertEqual(add_manifest_hooks(file),"sg.gumi.bravefrontier")
@@ -32,6 +37,13 @@ class ManifestInjectionTests(unittest.TestCase):
             self.assertEqual(app.get(ATTR("usesCleartextTraffic")),"true")
             self.assertEqual(root.find("uses-permission").get(ATTR("name")),
                              "android.permission.INTERNET")
+            self.assertIsNone(app.find("activity").find("intent-filter"))
+            bridge=app.findall("activity")[-1]
+            self.assertEqual(bridge.get(ATTR("name")),
+                             "com.domenklay.bfoffline.OfflineLaunchActivity")
+            self.assertEqual(bridge.find("meta-data").get(ATTR("value")),
+                             "sg.gumi.bravefrontier.AppActivity")
+            self.assertIsNotNone(bridge.find("intent-filter"))
 
 if __name__=="__main__":
     unittest.main()
