@@ -59,6 +59,37 @@ def add_manifest_hooks(manifest):
     service.set(ATTR("name"),HOST_PACKAGE+".EmbeddedServerService")
     service.set(ATTR("process"),":bfserver")
     service.set(ATTR("exported"),"false")
+    # Move ONLY MAIN/LAUNCHER to a native-ready gate; leave the original
+    # Activity, theme, resources, deep links and all gameplay code unchanged.
+    candidates=[]
+    for node in application:
+        if node.tag not in ("activity","activity-alias"): continue
+        for intent in list(node.findall("intent-filter")):
+            actions={a.get(ATTR("name")) for a in intent.findall("action")}
+            categories={a.get(ATTR("name")) for a in intent.findall("category")}
+            if "android.intent.action.MAIN" in actions and \
+                    "android.intent.category.LAUNCHER" in categories:
+                candidates.append((node,intent))
+    if len(candidates)!=1:
+        raise RuntimeError("Expected exactly one original launcher, found "+str(len(candidates)))
+    original,old_filter=candidates[0]
+    name=original.get(ATTR("name"))
+    if not name: raise RuntimeError("Original launcher has no component name")
+    if name.startswith("."): name=package+name
+    elif "." not in name: name=package+"."+name
+    original.remove(old_filter)
+    gateway=ET.SubElement(application,"activity")
+    gateway.set(ATTR("name"),HOST_PACKAGE+".OfflineLaunchActivity")
+    gateway.set(ATTR("exported"),"true")
+    gateway.set(ATTR("screenOrientation"),"portrait")
+    meta=ET.SubElement(gateway,"meta-data")
+    meta.set(ATTR("name"),"bf_offline.original_activity")
+    meta.set(ATTR("value"),name)
+    launch_filter=ET.SubElement(gateway,"intent-filter")
+    action=ET.SubElement(launch_filter,"action")
+    action.set(ATTR("name"),"android.intent.action.MAIN")
+    category=ET.SubElement(launch_filter,"category")
+    category.set(ATTR("name"),"android.intent.category.LAUNCHER")
     doc.write(manifest,encoding="utf-8",xml_declaration=True)
     return package
 
