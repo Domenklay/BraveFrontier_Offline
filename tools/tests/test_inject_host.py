@@ -36,8 +36,9 @@ class ManifestInjectionTests(unittest.TestCase):
             self.assertEqual(app.find("service").get(ATTR("exported")),"false")
             self.assertEqual(app.find("provider").get(ATTR("exported")),"false")
             self.assertEqual(app.get(ATTR("usesCleartextTraffic")),"true")
-            self.assertEqual(root.find("uses-permission").get(ATTR("name")),
-                             "android.permission.INTERNET")
+            permissions={n.get(ATTR("name")) for n in root.findall("uses-permission")}
+            self.assertIn("android.permission.INTERNET",permissions)
+            self.assertIn("android.permission.FOREGROUND_SERVICE",permissions)
             self.assertEqual(root.find("uses-sdk").get(ATTR("minSdkVersion")),"24")
             self.assertIsNone(app.find("activity").find("intent-filter"))
             bridge=app.findall("activity")[-1]
