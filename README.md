@@ -5,6 +5,8 @@
 **Это НЕ новый клон Brave Frontier.** Ранее сделанный независимый прототип признан неподходящим и вынесен в архивную ветку [archive/independent-prototype-v0.1.0](https://github.com/Domenklay/BraveFrontier_Offline/tree/archive/independent-prototype-v0.1.0). APK из старого релиза не является оригинальной игрой.
 
 
+**Актуальный прогресс и следующие действия:** [CURRENT_STATUS.ru.md](docs/CURRENT_STATUS.ru.md). На данный момент работоспособность полного офлайн-APK ещё не подтверждена.
+
 ## Эксперимент: встроенный сервер в тот же APK
 
 Основная разработка ведётся в `main`; ветка `feature/embedded-server-bootstrap` сохраняет экспериментальную историю.
