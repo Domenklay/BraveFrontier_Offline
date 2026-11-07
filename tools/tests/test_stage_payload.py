@@ -1,4 +1,5 @@
 import hashlib
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -49,6 +50,9 @@ class StagingTests(unittest.TestCase):
             self.assertTrue((output/"config.json").exists())
             self.assertIn("127.0.0.1:9960/pages/versioninfo",
                           (output/"config.json").read_text())
+            parsed=json.loads((output/"config.json").read_text())
+            self.assertEqual(parsed["server"]["public_host"],"127.0.0.1:9960")
+            self.assertEqual(parsed["server"]["resource_host"],"127.0.0.1:9960")
             self.assertTrue((output/"game_content"/"content"/"test.png").exists())
             lines=(output/"manifest.tsv").read_text().splitlines()
             self.assertTrue(any("game_content/content/test.png" in x for x in lines))
