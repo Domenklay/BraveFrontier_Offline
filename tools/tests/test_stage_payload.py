@@ -16,7 +16,7 @@ class StagingTests(unittest.TestCase):
             deploy=upstream/"server"/"server"/"deploy"
             (deploy/"system").mkdir(parents=True)
             (deploy/"config.json").write_text(
-                '{"listeners":[{"address": "127.0.0.1", "port": 9960}], "server": {}, '
+                '{"listeners":[{"address": "127.0.0.1", "port": 9960}], "server": {"game_version": 21900}, '
                 '"notice_url": "http://ios21900.bfww.gumi.sg/pages/versioninfo"}')
             (deploy/"system"/"flags.json").write_text("{}")
             archive=upstream/"data"/"archive"
