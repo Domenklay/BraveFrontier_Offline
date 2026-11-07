@@ -45,7 +45,7 @@ def main():
     script=script.replace(anchor,anchor+"\nset(CMAKE_POSITION_INDEPENDENT_CODE ON)",1)
     # Preserve upstream's CMAKE_SOURCE_DIR (packet generator expects it).
     script+="\n# Android bridge (added to disposable source checkout)\n"
-    script+=('add_subdirectory("'+BRIDGE.as_posix()+'" "
+    script += 'add_subdirectory("{}" "${CMAKE_BINARY_DIR}/offline_bridge")\n'.format(BRIDGE.as_posix())
     cmakelists.write_text(script,encoding="utf-8")
     vcpkg=Path(args.vcpkg).resolve()
     ndk=Path(args.ndk).resolve()
