@@ -45,6 +45,15 @@ def add_manifest_hooks(manifest):
         root.insert(0,node)
     application=root.find("application")
     if application is None: raise RuntimeError("Original APK manifest has no application")
+    # The injected Android service requires API 24+; do not offer a broken
+    # package to Android 4.x/5.x/6.x devices despite the legacy client's minSdk16.
+    sdk = root.find("uses-sdk")
+    if sdk is None:
+        sdk = ET.Element("uses-sdk")
+        root.insert(0, sdk)
+    current_min = int(sdk.get(ATTR("minSdkVersion"), "1"))
+    if current_min < 24:
+        sdk.set(ATTR("minSdkVersion"), "24")
     if application.get(ATTR("name"))=="com.domenklay.bfoffline.OfflineBootstrapProvider":
         raise RuntimeError("Unexpected original Application value")
     # An extracted native .so may be compressed in the APK.
