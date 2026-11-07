@@ -62,8 +62,8 @@ public final class OfflineLaunchActivity extends Activity {
                 if (bootError.isFile()) {
                     runOnUiThread(() -> {
                         if (!destroyed && !isFinishing())
-                            state.setText("Локальный сервер не запустился.\\n"
-                                + "Проверьте игровые таблицы и библиотеку сервера.\\n"
+                            state.setText("Локальный сервер не запустился.\n"
+                                + "Проверьте игровые таблицы и библиотеку сервера.\n"
                                 + "Подробности: adb logcat | grep BF-Offline");
                     });
                     return;
