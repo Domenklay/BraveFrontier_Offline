@@ -72,30 +72,3 @@ if __name__=="__main__":
     try:main()
     except (subprocess.CalledProcessError,RuntimeError) as e:
         sys.exit(f"Android NDK build unresolved: {e}")
-+'{CMAKE_BINARY_DIR}/offline_bridge")\n')
-    cmakelists.write_text(script,encoding="utf-8")
-    vcpkg=Path(args.vcpkg).resolve()
-    ndk=Path(args.ndk).resolve()
-    run(["cmake","-S",WORK,"-B",OUT,"-G","Ninja",
-         f"-DCMAKE_TOOLCHAIN_FILE={vcpkg/'scripts/buildsystems/vcpkg.cmake'}",
-         f"-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE={ndk/'build/cmake/android.toolchain.cmake'}",
-         "-DVCPKG_TARGET_TRIPLET=arm64-android",
-         "-DANDROID_ABI=arm64-v8a",
-         "-DANDROID_PLATFORM=android-26",
-         "-DANDROID_STL=c++_static",
-         "-DGIMUSRV_FRONTEND=STANDALONE",
-         "-DGIMU_ENABLE_DEBUG_CLI=OFF",
-         "-DCMAKE_BUILD_TYPE=Release"])
-    if args.configure_only: return
-    run(["cmake","--build",OUT,"--target","bf_offline_server","--parallel","2"])
-    lib=OUT/"offline_native"/"libbf_offline_server.so"
-    if not lib.is_file(): raise RuntimeError(f"No compiled library at {lib}")
-    TARGET.parent.mkdir(parents=True,exist_ok=True)
-    shutil.copy2(lib,TARGET)
-    print("Existing server compiled for Android:",TARGET)
-    print("Runtime and original-client boot are not yet verified.")
-
-if __name__=="__main__":
-    try:main()
-    except (subprocess.CalledProcessError,RuntimeError) as e:
-        sys.exit(f"Android NDK build unresolved: {e}")
