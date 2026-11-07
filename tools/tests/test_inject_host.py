@@ -39,7 +39,7 @@ class ManifestInjectionTests(unittest.TestCase):
             permissions={n.get(ATTR("name")) for n in root.findall("uses-permission")}
             self.assertIn("android.permission.INTERNET",permissions)
             self.assertIn("android.permission.FOREGROUND_SERVICE",permissions)
-            self.assertEqual(root.find("uses-sdk").get(ATTR("minSdkVersion")),"24")
+            self.assertEqual(root.find("uses-sdk").get(ATTR("minSdkVersion")),"26")
             self.assertIsNone(app.find("activity").find("intent-filter"))
             bridge=app.findall("activity")[-1]
             self.assertEqual(bridge.get(ATTR("name")),
