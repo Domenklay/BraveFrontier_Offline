@@ -7,6 +7,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Build;
 import android.os.SystemClock;
 import android.view.Gravity;
 import android.widget.TextView;
@@ -46,7 +47,12 @@ public final class OfflineLaunchActivity extends Activity {
             original = ai.metaData != null ? ai.metaData.getString(META_ORIGINAL) : null;
             if (original == null || original.isEmpty())
                 throw new IllegalStateException("Original launcher component not registered");
-            startService(new Intent(this,EmbeddedServerService.class));
+            Intent service = new Intent(this, EmbeddedServerService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(service);
+            } else {
+                startService(service);
+            }
         } catch (Exception ex) {
             Log.e("BF-Offline","Launch integration missing",ex);
             state.setText("Не удалось подготовить офлайн-клиент.\nПроверьте сборку и logcat.");

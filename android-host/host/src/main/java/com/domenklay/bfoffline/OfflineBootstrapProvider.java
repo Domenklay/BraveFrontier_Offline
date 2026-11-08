@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Log;
 
 /**
@@ -15,8 +16,12 @@ public final class OfflineBootstrapProvider extends ContentProvider {
     @Override public boolean onCreate() {
         try {
             if (getContext() != null) {
-                getContext().startService(
-                    new Intent(getContext(), EmbeddedServerService.class));
+                Intent service = new Intent(getContext(), EmbeddedServerService.class);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    getContext().startForegroundService(service);
+                } else {
+                    getContext().startService(service);
+                }
             }
         } catch (RuntimeException e) {
             Log.e("BF-Offline", "Cannot start native game-server service", e);
