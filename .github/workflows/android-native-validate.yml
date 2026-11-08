@@ -21,9 +21,15 @@ jobs:
           run-id: 42489519485
           repository: Domenklay/BraveFrontier_Offline
           github-token: ${{ github.token }}
-      - uses: android-actions/setup-android@v3
       - name: Install Android NDK strip utilities
-        run: sdkmanager 'ndk;27.2.12479018'
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK=${ANDROID_HOME:-/usr/local/lib/android/sdk}
+          SDKMANAGER=$(find "$SDK/cmdline-tools" -name sdkmanager -type f | head -n 1)
+          test -n "$SDKMANAGER"
+          "$SDKMANAGER" --sdk_root="$SDK" 'ndk;27.2.12479018'
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
       - name: Validate JNI exports and remove debug sections
         shell: bash
         run: |
