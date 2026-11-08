@@ -95,13 +95,17 @@ def private_root_mode(adb):
     direct = run(adb + ["shell", "id", "-u"], check=False, capture=True)
     if direct.returncode == 0 and direct.stdout.strip() == "0":
         return "adb"
-    via_su = run(adb + ["shell", "su", "-c", "id -u"], check=False, capture=True)
-    if via_su.returncode == 0 and via_su.stdout.strip() == "0":
+    # LDPlayer's su handles "su -c id" reliably, but some builds parse
+    # "su -c id -u" / "su -c 'id -u'" differently. Match the exact
+    # command the user can verify manually, including Android's uid format.
+    via_su = run(adb + ["shell", "su", "-c", "id"], check=False, capture=True)
+    if via_su.returncode == 0 and re.search(r"\buid=0(?:\(root\)|\b)", via_su.stdout):
         return "su"
+    diag = (via_su.stdout or via_su.stderr or "").strip()[:250]
     raise RuntimeError(
-        "Root is unavailable: enable Root permission in LDPlayer Settings > Other, "
-        "restart LDPlayer, then verify with: adb -s SERIAL shell su -c id. "
-        "Do not use adb root on a production Android image."
+        "Root is unavailable to the script. Run: adb -s SERIAL shell su -c id. "
+        f"Result (exit={via_su.returncode}): {diag!r}. "
+        "Enable Root in LDPlayer Settings > Other and restart if necessary."
     )
 
 
