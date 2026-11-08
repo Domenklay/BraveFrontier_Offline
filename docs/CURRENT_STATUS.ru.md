@@ -61,3 +61,13 @@
 - Текущая native-сборка: https://github.com/Domenklay/BraveFrontier_Offline/actions/workflows/android-native-build.yml; хост-библиотека: https://github.com/Domenklay/BraveFrontier_Offline/actions/workflows/android-host.yml.
 
 **По-прежнему не готово:** `libbf_offline_server.so`, локальный набор client `/content` и `/mst`, полноценное декодированное содержимое этих мастер-таблиц, устанавливаемый и проверенный Brave Frontier Offline APK. Без этих компонентов нельзя честно утверждать, что игра работает без интернета.
+
+## Подтверждённый результат сборки сервера — 8 ноября 2026
+
+- **NDK ARM64 C++ сервер собран успешно**: [GitHub Actions #42489519485](https://github.com/Domenklay/BraveFrontier_Offline/actions/runs/42489519485). Получена `libbf_offline_server.so`, архитектура `ELF64 AArch64`, исходный SHA256 `bd1afbf6bc7b0814df04056d2e33ae5aef0897cebe7b733eeca321f37f8aaab6`.
+- Успешно проверена **отладочная очистка** этой же библиотеки: [GitHub Actions #42491727475](https://github.com/Domenklay/BraveFrontier_Offline/actions/runs/42491727475). Размер уменьшен с 853 708 192 до **40 764 640 байт**; SHA256 очищенной версии `d4d9b367c035c18fe365ffa749fb2a83c7899223c13fd9a21ded1660cc6cd898`.
+- В `libbf_offline_server.so` присутствуют требуемые экспортируемые JNI-функции `runNativeServer` и `stopNativeServer`; в NEEDED остаются только стандартные Android `liblog.so`, `libdl.so`, `libm.so`, `libc.so`.
+- Исходники сервера остаются в pinned upstream. В `tools/build_android_native.py` автоматизированы NDK-сборка, очистка отладочных секций и проверка JNI-символов.
+- Реализован [сканер ресурсоёмких файлов LDPlayer](../tools/inventory_android_dump.py), который по сигнатурам определяет графику, звук, архивы и проверяет доступные декодированные MST. [Инструкция](LDPLAYER_RESOURCE_CAPTURE.ru.md). CI тестов Android-оболочки и сканера — успешно.
+
+**Теперь главные блокеры:** локальная выгрузка полного набора клиентских `/content`, `/mst` и 126 декодированных MST; сборка одного подписанного APK с сервером; тест реального запуска в Android (включая работу без интернета, профиль, бои и сохранение). Native-библиотека **успешно скомпилирована, но не протестирована на устройстве**.
