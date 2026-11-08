@@ -1,0 +1,53 @@
+name: Validate and strip compiled Android BF server
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/android-native-validate.yml'
+jobs:
+  validate-native-artifact:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: bf-original-server-android-arm64
+          path: native
+          run-id: 42489519485
+          repository: Domenklay/BraveFrontier_Offline
+          github-token: ${{ github.token }}
+      - name: Install Android NDK strip utilities
+        run: sdkmanager 'ndk;27.2.12479018'
+      - name: Validate JNI exports and remove debug sections
+        shell: bash
+        run: |
+          set -euo pipefail
+          SO=native/libbf_offline_server.so
+          TOOL=$ANDROID_HOME/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin
+          test -s "$SO"
+          file "$SO"
+          readelf -h "$SO" | grep -F 'AArch64'
+          echo 'Native shared object dependencies:'
+          readelf -d "$SO" | grep NEEDED || true
+          echo 'Checking Java bridge symbols:'
+          nm -D "$SO" | grep 'Java_com_domenklay_bfoffline_EmbeddedServerService_runNativeServer'
+          nm -D "$SO" | grep 'Java_com_domenklay_bfoffline_EmbeddedServerService_stopNativeServer'
+          cp "$SO" native/server-unstripped.so
+          "$TOOL/llvm-strip" --strip-debug "$SO"
+          nm -D "$SO" | grep 'Java_com_domenklay_bfoffline_EmbeddedServerService_runNativeServer'
+          nm -D "$SO" | grep 'Java_com_domenklay_bfoffline_EmbeddedServerService_stopNativeServer'
+          sha256sum "$SO"
+          stat -c 'Unstripped bytes: %s' native/server-unstripped.so
+          stat -c 'Stripped bytes: %s' "$SO"
+          rm native/server-unstripped.so
+      - name: Publish stripped native library for integration
+        uses: actions/upload-artifact@v4
+        with:
+          name: bf-upstream-android-arm64-stripped
+          path: native/libbf_offline_server.so
+          if-no-files-found: error
