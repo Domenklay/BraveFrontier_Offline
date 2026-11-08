@@ -133,7 +133,7 @@ def prepare(args):
     if not raw.is_dir(): raise RuntimeError("Missing raw directory: "+str(raw))
     if reviewed.exists():
         raise RuntimeError("Review output already exists. Use a new directory: "+str(reviewed))
-    if reviewed == raw or raw in reviewed.parents is False and reviewed in raw.parents:
+    if reviewed == raw or raw in reviewed.parents or reviewed in raw.parents:
         raise RuntimeError("Review output must be distinct from the raw input")
     candidates=[]
     counts=Counter()
