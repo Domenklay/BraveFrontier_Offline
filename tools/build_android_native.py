@@ -97,6 +97,14 @@ def main():
     promote_types(Path("gimuserver/gme/common/UnitPick.cpp"), ("RacePickFile",))
     promote_types(Path("gimuserver/gme/common/NewsPosts.cpp"), ("NewsFile",))
     promote_types(Path("gimuserver/gme/common/RaidRooms.cpp"), ("RoomPartyRow",))
+    # Request DTOs used directly by Glaze in existing quest and summoning
+    # handlers are subject to the same NDK-only linkage restriction.
+    promote_types(Path("gimuserver/gme/handlers/TrialDeck.cpp"),
+                  ("TrialDeckRow", "TrialDeckReq", "TrialDeckResp"))
+    promote_types(Path("gimuserver/gme/handlers/UnitOmniEvo.cpp"),
+                  ("OmniRecipeTypeNode", "OmniEvoBody"))
+    promote_types(Path("gimuserver/gme/handlers/UnitSelectorGachaTicket.cpp"),
+                  ("SelectorReqItem", "SelectorReq"))
     cmakelists=WORK/"CMakeLists.txt"
     script=cmakelists.read_text(encoding="utf-8")
     anchor="project(GimuServer)"
