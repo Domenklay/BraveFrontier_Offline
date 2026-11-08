@@ -136,8 +136,29 @@ def main():
     if not lib.is_file(): raise RuntimeError(f"No compiled library at {lib}")
     TARGET.parent.mkdir(parents=True,exist_ok=True)
     shutil.copy2(lib,TARGET)
+    # Trim only DWARF/debug data. Keep JNI dynamic symbols and C++ static
+    # initialisers needed by Drogon's original controller registrations.
+    original_size = TARGET.stat().st_size
+    llvm_tools = ndk/"toolchains"/"llvm"/"prebuilt"
+    candidates = sorted(llvm_tools.glob("*/bin/llvm-strip"))
+    if not candidates:
+        candidates = sorted(llvm_tools.glob("*/bin/llvm-strip.exe"))
+    if not candidates:
+        raise RuntimeError("NDK llvm-strip executable not found")
+    strip_tool = candidates[0]
+    run([strip_tool, "--strip-debug", TARGET])
+    nm_tool = strip_tool.with_name("llvm-nm" + (".exe" if strip_tool.suffix == ".exe" else ""))
+    if not nm_tool.is_file():
+        raise RuntimeError("NDK llvm-nm not found; cannot verify JNI exports")
+    exports = subprocess.run([str(nm_tool), "-D", str(TARGET)],
+                             check=True,capture_output=True,text=True).stdout
+    for symbol in ("Java_com_domenklay_bfoffline_EmbeddedServerService_runNativeServer",
+                   "Java_com_domenklay_bfoffline_EmbeddedServerService_stopNativeServer"):
+        if symbol not in exports:
+            raise RuntimeError("Required JNI entrypoint missing: " + symbol)
     print("Existing server compiled for Android:",TARGET)
-    print("Runtime and original-client boot are not yet verified.")
+    print(f"Native library size: {original_size} -> {TARGET.stat().st_size} bytes (debug stripped)")
+    print("JNI exports verified; Android runtime and original client are not yet tested.")
 
 if __name__=="__main__":
     try:main()
