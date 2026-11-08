@@ -42,7 +42,7 @@ class LDPlayerToPrivateGitTest(unittest.TestCase):
 
     def test_su_fallback_when_adbd_is_not_root(self):
         def fake_run(cmd, **kwargs):
-            output = "2000\\n" if "su" not in cmd else "0\\n"
+            output = "2000" if "su" not in cmd else "0"
             return SimpleNamespace(returncode=0, stdout=output)
         with patch("ldplayer_to_private_git.run", side_effect=fake_run):
             self.assertEqual(private_root_mode(["adb", "-s", "emulator-5554"]), "su")
