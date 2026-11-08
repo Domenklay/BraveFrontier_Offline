@@ -5,6 +5,8 @@
 **Это НЕ новый клон Brave Frontier.** Ранее сделанный независимый прототип признан неподходящим и вынесен в архивную ветку [archive/independent-prototype-v0.1.0](https://github.com/Domenklay/BraveFrontier_Offline/tree/archive/independent-prototype-v0.1.0). APK из старого релиза не является оригинальной игрой.
 
 
+**Выгрузка ресурсов из LDPlayer 9 в приватный GitHub:** [пошаговая инструкция](docs/LDPLAYER_TO_PRIVATE_GIT.ru.md) и [автоматический инструмент](tools/ldplayer_to_private_git.py). В публичный репозиторий оригинальные игровые данные не загружаются.
+
 **Актуальный прогресс и следующие действия:** [CURRENT_STATUS.ru.md](docs/CURRENT_STATUS.ru.md). На данный момент работоспособность полного офлайн-APK ещё не подтверждена.
 
 ## Эксперимент: встроенный сервер в тот же APK
