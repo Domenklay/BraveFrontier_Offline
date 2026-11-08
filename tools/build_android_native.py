@@ -65,6 +65,38 @@ def main():
     tuning_source = tuning_source.replace(tuning_open, tuning_patched_open, 1)
     tuning_source = tuning_source.replace(tuning_close, tuning_patched_close, 1)
     tuning.write_text(tuning_source, encoding="utf-8")
+    # The pinned upstream has several additional Glaze DTOs declared in
+    # anonymous namespaces. Clang 18 + Glaze 6.5 rejects their generated
+    # external variable templates. Promote ONLY those data structs to their
+    # enclosing named namespace in the disposable Android copy; all state,
+    # functions, gameplay logic and files in upstream/ remain untouched.
+    def promote_types(path, names):
+        target = WORK/path
+        contents = target.read_text(encoding="utf-8")
+        for name in names:
+            declaration = "struct " + name + "\n{"
+            if contents.count(declaration) != 1:
+                raise RuntimeError("Pinned upstream Glaze layout changed: " + str(path) + ": " + name)
+            begin = contents.index(declaration)
+            end = contents.find("\n};", begin)
+            if end < 0:
+                raise RuntimeError("Unterminated Glaze DTO: " + str(path) + ": " + name)
+            end += len("\n};")
+            contents = (contents[:begin]
+                + "} // leave anonymous namespace for Glaze DTO\n\n"
+                + contents[begin:end]
+                + "\n\nnamespace\n{ // resume original anonymous namespace\n"
+                + contents[end:])
+        target.write_text(contents, encoding="utf-8")
+
+    promote_types(Path("gimuserver/gme/common/EventRotation.cpp"),
+                  ("RotationEvent", "EventRotationFile", "ScheduleEvent", "EventSchedule"))
+    promote_types(Path("gimuserver/gme/common/Exchange.cpp"), ("ForgeOffer",))
+    promote_types(Path("gimuserver/gme/common/SummonRotation.cpp"),
+                  ("RotationGate", "RotationFile"))
+    promote_types(Path("gimuserver/gme/common/UnitPick.cpp"), ("RacePickFile",))
+    promote_types(Path("gimuserver/gme/common/NewsPosts.cpp"), ("NewsFile",))
+    promote_types(Path("gimuserver/gme/common/RaidRooms.cpp"), ("RoomPartyRow",))
     cmakelists=WORK/"CMakeLists.txt"
     script=cmakelists.read_text(encoding="utf-8")
     anchor="project(GimuServer)"
