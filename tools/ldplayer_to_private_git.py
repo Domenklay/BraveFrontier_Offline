@@ -116,7 +116,10 @@ def stream_private_tar(adb, remote, destination):
     cannot create files outside the local backup. The result is a RAW backup,
     never a directory suitable for direct public upload.
     """
-    cmd = adb + ["exec-out", "su", "-c", "tar -C " + remote + " -cf - ."]
+    # ADB passes the exec-out command through Android's shell. Supply the
+    # complete su invocation as ONE command string so Android receives the
+    # tar arguments inside su -c, not as arguments to su itself.
+    cmd = adb + ["exec-out", "su -c 'tar -C " + remote + " -cf - .'"]
     process = subprocess.Popen([str(x) for x in cmd],
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     copied = 0
@@ -171,7 +174,8 @@ def pull(args):
     for label,remote in targets.items():
         internal = label.startswith("private_")
         if internal and root_mode == "su":
-            exists = run(adb+["shell", "su", "-c", "test -d "+remote],
+            # Use the same quoting as a manually verified privileged shell.
+            exists = run(adb+["shell", "su -c 'test -d "+remote+"'"],
                          check=False, capture=True).returncode == 0
         else:
             exists = adb_shell_exists(adb, remote)
