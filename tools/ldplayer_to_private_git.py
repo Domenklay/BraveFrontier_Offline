@@ -11,7 +11,8 @@ No command modifies Android app data. Never point publish at the raw dump.
 from __future__ import annotations
 import argparse
 from collections import Counter
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+import tarfile
 import re
 import shutil
 import subprocess
@@ -88,6 +89,63 @@ def adb_for(args):
 def adb_shell_exists(adb, remote):
     return run(adb+["shell","test","-d",remote],check=False,capture=True).returncode == 0
 
+def private_root_mode(adb):
+    # Some LDPlayer 9 production images reject 'adb root' even when the
+    # emulator's built-in su binary grants a privileged shell.
+    direct = run(adb + ["shell", "id", "-u"], check=False, capture=True)
+    if direct.returncode == 0 and direct.stdout.strip() == "0":
+        return "adb"
+    via_su = run(adb + ["shell", "su", "-c", "id -u"], check=False, capture=True)
+    if via_su.returncode == 0 and via_su.stdout.strip() == "0":
+        return "su"
+    raise RuntimeError(
+        "Root is unavailable: enable Root permission in LDPlayer Settings > Other, "
+        "restart LDPlayer, then verify with: adb -s SERIAL shell su -c id. "
+        "Do not use adb root on a production Android image."
+    )
+
+
+def stream_private_tar(adb, remote, destination):
+    """Stream privileged files from Android to Windows without a root ADB daemon.
+
+    Excludes tar symlinks, absolute paths, and traversal so malformed archives
+    cannot create files outside the local backup. The result is a RAW backup,
+    never a directory suitable for direct public upload.
+    """
+    cmd = adb + ["exec-out", "su", "-c", "tar -C " + remote + " -cf - ."]
+    process = subprocess.Popen([str(x) for x in cmd],
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    copied = 0
+    try:
+        with tarfile.open(fileobj=process.stdout, mode="r|*") as archive:
+            for entry in archive:
+                if not entry.isfile():
+                    continue
+                raw_parts = entry.name.replace("\\", "/").split("/")
+                if entry.name.startswith("/") or ".." in raw_parts:
+                    raise RuntimeError("Unsafe path in Android tar archive")
+                relative = PurePosixPath(entry.name)
+                if not relative.parts or ":" in entry.name:
+                    continue
+                target = destination.joinpath(*relative.parts)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                source = archive.extractfile(entry)
+                if source is None:
+                    continue
+                with source, target.open("xb") as output:
+                    shutil.copyfileobj(source, output, length=1024 * 1024)
+                copied += 1
+        process.stdout.close()
+        errors = process.stderr.read().decode("utf-8", errors="replace")
+        if process.wait() != 0:
+            raise RuntimeError("Privileged Android archive failed: " + errors[-600:])
+    except Exception:
+        process.kill()
+        process.wait()
+        raise
+    return copied
+
+
 def pull(args):
     adb = adb_for(args)
     pm = run(adb+["shell","pm","path",PKG],capture=True)
@@ -100,19 +158,20 @@ def pull(args):
         "external_cache": f"/sdcard/Android/data/{PKG}/cache",
         "external_obb": f"/sdcard/Android/obb/{PKG}",
     }
+    root_mode = private_root_mode(adb) if args.private_files else None
     if args.private_files:
-        root = run(adb+["root"],check=False,capture=True)
-        run(adb+["wait-for-device"])
-        uid = run(adb+["shell","id","-u"],capture=True)
-        if uid.stdout.strip() != "0":
-            raise RuntimeError("ADB is not root. Enable Root/ADB in LDPlayer settings, "
-                               "restart the emulator, then retry --private-files.")
         targets["private_files"] = f"/data/data/{PKG}/files"
         if args.private_cache:
             targets["private_cache"] = f"/data/data/{PKG}/cache"
     copied = 0
     for label,remote in targets.items():
-        if not adb_shell_exists(adb,remote):
+        internal = label.startswith("private_")
+        if internal and root_mode == "su":
+            exists = run(adb+["shell", "su", "-c", "test -d "+remote],
+                         check=False, capture=True).returncode == 0
+        else:
+            exists = adb_shell_exists(adb, remote)
+        if not exists:
             print("Not found (skipping):",remote)
             continue
         dest = out/label
@@ -120,7 +179,11 @@ def pull(args):
             raise RuntimeError("Refusing to overwrite existing backup: " + str(dest))
         dest.mkdir(parents=True, exist_ok=True)
         print(f"Pulling {remote} -> {dest}",flush=True)
-        run(adb+["pull",remote,str(dest)])
+        if internal and root_mode == "su":
+            count = stream_private_tar(adb, remote, dest)
+            print(f"Extracted {count} regular files via su/tar into {dest}")
+        else:
+            run(adb+["pull",remote,str(dest)])
         copied += 1
     if not copied:
         raise RuntimeError("No app resource folders were found. Inspect via ADB shell first.")
