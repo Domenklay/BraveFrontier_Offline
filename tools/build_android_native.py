@@ -56,10 +56,10 @@ def main():
     # Keep the source overlay private to the disposable Android build tree.
     tuning = WORK/"gimuserver"/"forge"/"Tuning.cpp"
     tuning_source = tuning.read_text(encoding="utf-8")
-    tuning_open = "namespace forge\\n{\\n\\nnamespace\\n{\\n\\nstruct RawTuning"
-    tuning_patched_open = "namespace forge\\n{\\n\\nstruct RawTuning"
+    tuning_open = "namespace forge\n{\n\nnamespace\n{\n\nstruct RawTuning"
+    tuning_patched_open = "namespace forge\n{\n\nstruct RawTuning"
     tuning_close = "struct TuningOpts : glz::opts"
-    tuning_patched_close = "namespace\\n{\\n\\nstruct TuningOpts : glz::opts"
+    tuning_patched_close = "namespace\n{\n\nstruct TuningOpts : glz::opts"
     if tuning_source.count(tuning_open) != 1 or tuning_source.count(tuning_close) != 1:
         raise RuntimeError("Pinned upstream Tuning.cpp layout changed")
     tuning_source = tuning_source.replace(tuning_open, tuning_patched_open, 1)
