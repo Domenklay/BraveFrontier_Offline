@@ -52,6 +52,19 @@ def main():
     source = source.replace(original_open, patched_open, 1)
     source = source.replace(original_close, patched_close, 1)
     capture.write_text(source, encoding="utf-8")
+    # Same upstream Glaze anonymous-type linkage issue applies to RawTuning.
+    # Keep the source overlay private to the disposable Android build tree.
+    tuning = WORK/"gimuserver"/"forge"/"Tuning.cpp"
+    tuning_source = tuning.read_text(encoding="utf-8")
+    tuning_open = "namespace forge\\n{\\n\\nnamespace\\n{\\n\\nstruct RawTuning"
+    tuning_patched_open = "namespace forge\\n{\\n\\nstruct RawTuning"
+    tuning_close = "struct TuningOpts : glz::opts"
+    tuning_patched_close = "namespace\\n{\\n\\nstruct TuningOpts : glz::opts"
+    if tuning_source.count(tuning_open) != 1 or tuning_source.count(tuning_close) != 1:
+        raise RuntimeError("Pinned upstream Tuning.cpp layout changed")
+    tuning_source = tuning_source.replace(tuning_open, tuning_patched_open, 1)
+    tuning_source = tuning_source.replace(tuning_close, tuning_patched_close, 1)
+    tuning.write_text(tuning_source, encoding="utf-8")
     cmakelists=WORK/"CMakeLists.txt"
     script=cmakelists.read_text(encoding="utf-8")
     anchor="project(GimuServer)"
