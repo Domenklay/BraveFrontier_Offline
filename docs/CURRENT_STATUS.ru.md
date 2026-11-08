@@ -50,3 +50,14 @@
 5. Только потом собственные существа и игровые режимы через upstream balance overlays.
 
 В исходной форме server + APK **невозможно** назвать полноценной офлайн-версией без ресурса MST и контентного архива; не обещать готовый APK до тестов.
+
+## Обновление — 8 ноября 2026
+
+- Повторно проверено присланное `bfrevive-V20.apk` из вложения. Проверка ZIP-CRC прошла, SHA-256 `libgame.so` совпадает с зафиксированным в `docs/BFREVIVE_V20_APK_AUDIT.md`.
+- В рабочем контейнере адресный патчер создал неподписанный `bfrevive-V20-localhost-UNSIGNED.apk`; CRC архива и SHA-256 пропатченной `libgame.so` совпали с ожидаемым значением. **Это не установочный или играбельный APK**, сервер и контент в него ещё не встраивались.
+- В `android-host` исправлен запуск `EmbeddedServerService` через `startForegroundService` на Android 8+. CI компиляции Android host + тестов успешно завершился.
+- Следующая ошибка полной NDK-сборки выявила Glaze + анонимные структуры `EventRotation.cpp`, `Exchange.cpp`; в `tools/build_android_native.py` добавлено автоматическое безопасное для логики повышение видимости соответствующих DTO в **временной копии исходников**. Таким же способом обработаны другие известные DTO из `SummonRotation`, `UnitPick`, `NewsPosts`, `RaidRooms`, `TrialDeck`, `UnitOmniEvo`, `UnitSelectorGachaTicket`. Основная библиотека к моменту этого обновления **ещё компилировалась**; успешную `.so` не заявлять до прохождения Actions.
+- Выделено ровно **126 различных названий decoded MST JSON**, непосредственно загружаемых из `ServerCache.cpp`; список: [required_mst_2_19_6.json](required_mst_2_19_6.json). Это минимальный базовый набор, а не гарантия полноты всех игровых ресурсов.
+- Текущая native-сборка: https://github.com/Domenklay/BraveFrontier_Offline/actions/workflows/android-native-build.yml; хост-библиотека: https://github.com/Domenklay/BraveFrontier_Offline/actions/workflows/android-host.yml.
+
+**По-прежнему не готово:** `libbf_offline_server.so`, локальный набор client `/content` и `/mst`, полноценное декодированное содержимое этих мастер-таблиц, устанавливаемый и проверенный Brave Frontier Offline APK. Без этих компонентов нельзя честно утверждать, что игра работает без интернета.
