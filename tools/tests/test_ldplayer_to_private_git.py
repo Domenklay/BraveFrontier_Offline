@@ -41,11 +41,22 @@ class LDPlayerToPrivateGitTest(unittest.TestCase):
             self.assertFalse((reviewed/"external_files"/"files"/"content"/"session-token.bin").exists())
 
     def test_su_fallback_when_adbd_is_not_root(self):
+        calls = []
         def fake_run(cmd, **kwargs):
-            output = "2000" if "su" not in cmd else "0"
+            calls.append(cmd)
+            output = ("uid=0(root) gid=0(root) groups=0(root) context=u:r:su:s0\n"
+                      if "su" in cmd else "2000\n")
             return SimpleNamespace(returncode=0, stdout=output)
         with patch("ldplayer_to_private_git.run", side_effect=fake_run):
             self.assertEqual(private_root_mode(["adb", "-s", "emulator-5554"]), "su")
+        self.assertEqual(calls[-1][-4:], ["shell", "su", "-c", "id"])
+
+    def test_su_non_root_is_rejected(self):
+        def fake_run(cmd, **kwargs):
+            return SimpleNamespace(returncode=0, stdout="uid=2000(shell) gid=2000(shell)")
+        with patch("ldplayer_to_private_git.run", side_effect=fake_run):
+            with self.assertRaisesRegex(RuntimeError, "Root is unavailable"):
+                private_root_mode(["adb", "-s", "emulator-5554"])
 
     def test_safe_stream_extracts_files_but_not_symlinks(self):
         contents = io.BytesIO()
