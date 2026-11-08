@@ -73,9 +73,13 @@ class LDPlayerToPrivateGitTest(unittest.TestCase):
         proc = SimpleNamespace(stdout=contents, stderr=io.BytesIO(),
                                wait=lambda: 0, kill=lambda: None)
         with tempfile.TemporaryDirectory() as tmp:
-            with patch("ldplayer_to_private_git.subprocess.Popen", return_value=proc):
+            with patch("ldplayer_to_private_git.subprocess.Popen", return_value=proc) as spawned:
                 count = stream_private_tar(["adb"], "/data/data/sg.gumi.bravefrontier/files",
                                            Path(tmp))
+            call = spawned.call_args.args[0]
+            self.assertEqual(call,
+                ["adb", "exec-out",
+                 "su -c 'tar -C /data/data/sg.gumi.bravefrontier/files -cf - .'"])
             self.assertEqual(count, 1)
             self.assertEqual((Path(tmp)/"sprites"/"unit01.webp").read_bytes(), b"textures")
             self.assertFalse((Path(tmp)/"sprites"/"unsafe-link").exists())
