@@ -1,0 +1,77 @@
+# LDPlayer 9 → ресурсный архив → приватный GitHub
+
+Все команды ниже выполняются на ПК с LDPlayer 9. Исходный APK не передаётся в публичный репозиторий.
+
+## 1. Подготовка
+
+Нужны Python 3, Git for Windows с Git LFS, GitHub CLI (`gh`) и `adb.exe` из LDPlayer 9. Узнайте реальный путь `adb.exe`; пример ниже замените своим.
+Игра должна успеть скачать данные. Не нажимайте «очистить данные» и не удаляйте приложение.
+
+```powershell
+$ADB = 'F:\LDPlayer\LDPlayer9\adb.exe' # пример: проверьте фактический путь
+& $ADB devices -l
+& $ADB shell pm path sg.gumi.bravefrontier
+```
+
+Если подключено несколько Android-устройств, во всех командах `pull` укажите `--serial SERIAL` после `--adb "$ADB"`.
+
+## 2. Выгрузить кэш и файлы игры на ПК
+
+В каталоге клонированного `Domenklay/BraveFrontier_Offline`:
+
+```powershell
+python tools/ldplayer_to_private_git.py pull --adb "$ADB" --output 'C:\BF_Archive'
+```
+
+Будут скопированы существующие `Android/data/<package>/files`, `Android/data/<package>/cache` и OBB. Команда не удаляет ничего из эмулятора, сохраняет исходные файлы в `C:\BF_Archive\raw` и не отправляет их в сеть. Если нужные ресурсы находятся в приватном каталоге приложения, включите Root в настройках LDPlayer и выполните дополнительно:
+
+```powershell
+# Не запускайте этот вариант поверх уже созданных одноимённых копий.
+python tools/ldplayer_to_private_git.py pull --adb "$ADB" --output 'D:\BF_Private_Archive' --private-files --private-cache
+```
+
+Приватная копия остаётся только на ПК. В этих каталогах могут находиться секреты аккаунта. Если ADB-root недоступен, не переносите `shared_prefs` и базы данных обходными способами; сначала определим конкретные подпапки с ресурсами.
+
+## 3. Подготовить кандидатов для Git
+
+```powershell
+python tools/ldplayer_to_private_git.py prepare --source 'C:\BF_Archive\raw' --output 'C:\BF_Archive\reviewed'
+```
+
+Первый вызов только показывает количество файлов и их общий размер. Для создания копии кандидатов:
+
+```powershell
+python tools/ldplayer_to_private_git.py prepare --source 'C:\BF_Archive\raw' --output 'C:\BF_Archive\reviewed' --confirm-review
+```
+
+Проверьте содержимое `reviewed` перед публикацией. Фильтр исключает известные каталоги учётных записей, ключи, логи и базы данных, но не гарантирует отсутствие секретов внутри неизвестных двоичных файлов. Особое внимание `.dat` и `.bin`. Часть неизвестных форматов может быть пропущена — это не означает, что они отсутствуют в игре.
+
+## 4. Создать ОТДЕЛЬНЫЙ PRIVATE-репозиторий
+
+На GitHub выберите `New repository`, имя `BraveFrontier_Assets` и visibility `Private`. Можно сделать это через авторизованный GitHub CLI:
+
+```powershell
+gh auth login
+gh repo create Domenklay/BraveFrontier_Assets --private
+git lfs version
+```
+
+Убедитесь, что репозиторий действительно приватный. Не добавляйте ресурсы к публичному `BraveFrontier_Offline`.
+
+## 5. Записать проверенные файлы в Git и загрузить
+
+```powershell
+# Первый прогон готовит Git и LFS, показывает что будет загружено, но НЕ публикует.
+python tools/ldplayer_to_private_git.py publish --source 'C:\BF_Archive\reviewed' --repo Domenklay/BraveFrontier_Assets
+
+# После ручной проверки отобранного — фактическая отправка в приватный GitHub:
+python tools/ldplayer_to_private_git.py publish --source 'C:\BF_Archive\reviewed' --repo Domenklay/BraveFrontier_Assets --push
+```
+
+Скрипт перед выгрузкой проверяет через GitHub CLI, что репозиторий PRIVATE, отказывается использовать публичный `BraveFrontier_Offline`, включает Git LFS для крупных игровых контейнеров и файлов >50 MiB, а также запрещает единичные объекты >2 GiB. Загруженные в Git LFS данные остаются на GitHub и учитываются в квотах владельца.
+
+GitHub Free/Pro включает по 10 GiB LFS-хранилища и месячного трафика; если выгруженных ресурсов больше квоты, не отправляйте их все сразу. Для очень большого архива сохраняем полную копию локально, а в Git — только нужную часть, затем решим вопрос с дополнительным хранилищем.
+
+## 6. Что прислать для продолжения интеграции
+
+Достаточно ссылки на **приватный** репозиторий (и настроенного доступа, если требуется), либо отчёта о форматах и объёме файлов без личных данных. Я сопоставлю полученное с `docs/required_mst_2_19_6.json` и входом `tools/stage_payload.py`, определю недостающие таблицы и ресурсы. Репозиторий может быть приватным, но это не заменяет разрешений правообладателей на распространение оригинальных игровых материалов.
