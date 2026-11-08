@@ -30,7 +30,7 @@ python tools/ldplayer_to_private_git.py pull --adb "$ADB" --output 'C:\BF_Archiv
 python tools/ldplayer_to_private_git.py pull --adb "$ADB" --output 'D:\BF_Private_Archive' --private-files --private-cache
 ```
 
-Приватная копия остаётся только на ПК. В этих каталогах могут находиться секреты аккаунта. Если ADB-root недоступен, не переносите `shared_prefs` и базы данных обходными способами; сначала определим конкретные подпапки с ресурсами.
+**Важно для LDPlayer 9:** команда `adb root` может ответить `adbd cannot run as root in production builds` даже при разрешённом Root. Проверить доступ следует через `adb -s emulator-5554 shell su -c id` — нужен `uid=0(root)`. Скрипт автоматически проверяет `su` и при необходимости считывает файлы через поток `adb exec-out su -c tar`, не переписывая системный образ эмулятора. После обновления проекта (`git pull`) можно повторить `pull --private-files --private-cache`. Приватная копия остаётся только на ПК. В этих каталогах могут находиться секреты аккаунта. Если ADB-root недоступен, не переносите `shared_prefs` и базы данных обходными способами; сначала определим конкретные подпапки с ресурсами.
 
 ## 3. Подготовить кандидатов для Git
 
