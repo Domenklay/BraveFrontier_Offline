@@ -21,6 +21,7 @@ jobs:
           run-id: 42489519485
           repository: Domenklay/BraveFrontier_Offline
           github-token: ${{ github.token }}
+      - uses: android-actions/setup-android@v3
       - name: Install Android NDK strip utilities
         run: sdkmanager 'ndk;27.2.12479018'
       - name: Validate JNI exports and remove debug sections
