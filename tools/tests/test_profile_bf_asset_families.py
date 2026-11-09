@@ -34,6 +34,8 @@ class BFAssetFamilyTests(unittest.TestCase):
                 "10011BattleEffectFire_512x512.png":PNG,
                 "unit_ills_anime_10011.png":PNG,
                 "unit_mst.csv":b"hero,id\n",
+                "Ver1084_2r9cNSdt_1.dat":b"encrypted MST data",
+                "misc_obfuscated.png":b"QRP0unknown data",
                 "content/shared_prefs/session.txt":b"secret private",
             }
             with tarfile.open(p, "w") as tar:
@@ -47,6 +49,9 @@ class BFAssetFamilyTests(unittest.TestCase):
             self.assertEqual(result["unit_ids_seen_in_any_standard_part"],2)
             self.assertEqual(result["sam_stems_with_dimension_suffixed_png"],1)
             self.assertEqual(result["possible_mst_csv_by_name"],1)
+            self.assertEqual(result["versioned_encrypted_mst_like_dat_names"],1)
+            self.assertTrue(any(x["hex"] == "51525030" and x["count"] == 1
+                                for x in result["unknown_png_top_four_byte_prefixes"]))
             self.assertEqual(result["skipped_sensitive_or_unsafe_names"],1)
             self.assertEqual(result["png_header_breakdown"]["PNG valid header"],3)
             self.assertEqual(result["png_header_breakdown"]["zero-prefixed PNG-named data"],1)
