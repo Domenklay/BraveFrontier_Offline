@@ -145,3 +145,31 @@ python tools/pull_ldplayer_staged_tar.py --adb "F:\LDPlayer\LDPlayer9\adb.exe" -
 После успешной выгрузки внутренняя копия на `/sdcard/Download` может
 быть удалена отдельно, только после ручного подтверждения целостности
 Windows-копии. **Не удаляйте** каталог игры в `/data/data`.
+
+
+## Сводный анализ полного проверенного TAR: 71 542 файла
+
+Проверенная копия, не требующая повторной выгрузки:
+
+`C:\BF_GameDump\bf-private-staged.tar`
+
+```powershell
+cd C:\BF_Project
+git pull --ff-only
+python tools/analyze_ldplayer_assets_tar.py "C:\BF_GameDump\bf-private-staged.tar" --output "C:\BF_GameDump\bf-asset-summary.json"
+```
+
+Анализатор не распаковывает и не отправляет файлы. Он проверяет
+сигнатуры PNG/JPEG/WebP/OGG/ZIP и других форматов, считает распределение
+по каталогам/расширениям, ищет совпадения имён обязательных MST JSON.
+В отчёте только сводные количества и размеры; имена отдельных файлов
+не включаются. Передавать можно только *сводный отчёт*, а не исходный
+приватный TAR.
+
+**Важно:** по проверке GitHub API от 9 ноября 2026 репозиторий
+`Domenklay/BraveFrontier_Assets` оказался **Public**. Перед любой
+передачей ресурсов требуется изменить его на **Private** через GitHub
+Settings → General → Danger Zone → Change repository visibility.
+Даже приватность GitHub не даёт дополнительных прав на распространение
+чужих игровых ресурсов. Сначала отбираем нужные файлы и убеждаемся,
+что в них нет личных данных.
