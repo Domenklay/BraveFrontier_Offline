@@ -199,3 +199,47 @@ python tools/profile_bf_asset_families.py "C:\BF_GameDump\bf-private-staged.tar"
 файловых имён и приватных данных. TAR не распаковывается и не передаётся.
 Описание форматов и принципы анимации можно сверить с
 `BluuArc/BFFrameAnimator` и `iammathew/SAJSON` на GitHub.
+
+
+## После профилирования: реальные образцы анимации и неизвестные форматы PNG
+
+Для проверенного TAR `C:\BF_GameDump\bf-private-staged.tar` найдено
+2 244 уникальных ID юнитов (по частям), из них 1 625 с полным набором
+`unit_anime_*.png` + четыре CSV; у эффектов найдено 4 233 пары
+`*.sam` + спрайт-листы `*_WxH.png`. Это проверка имён, не гарантия
+работающей анимации. 20 678 PNG-именованных файлов не имеют обычной
+PNG-сигнатуры и требуют изучения упаковки/шифрования.
+
+**Локальная выборка 5 полных юнитов с распознаваемым PNG-листом:**
+
+```powershell
+cd C:\BF_Project
+git pull --ff-only
+python tools/extract_bf_animation_sample.py "C:\BF_GameDump\bf-private-staged.tar" --count 5 --output "C:\BF_GameDump\bf-animation-sample"
+```
+
+Инструмент создаёт только каталог `Units/<ID>/` с одним PNG и
+четырьмя CSV, `list.txt` и `manifest.json`, совместимый с
+BluuArc/BFFrameAnimator. Не извлекает случайные личные файлы,
+не перезаписывает готовую директорию, не отправляет данные в сеть.
+
+**Дополнительная диагностика нестандартных текстур и MST DAT:**
+
+```powershell
+python tools/profile_bf_asset_families.py "C:\BF_GameDump\bf-private-staged.tar" --output "C:\BF_GameDump\bf-animation-summary-v2.json"
+```
+
+В новом отчёте:
+`unknown_png_top_four_byte_prefixes` — группировка первых
+4 байт неизвестных PNG по общему количеству, без имён;
+`versioned_encrypted_mst_like_dat_names` — количество
+потенциальных зашифрованных MST по шаблону `Ver*_*[...].dat`.
+**Не надо считать их готовыми таблицами**: дешифровка и
+соответствие JSON-схемам сервера ещё не доказаны. Известна утилита
+`decompfrontier/scripts/mstdec.py`, поддерживающая лишь конкретные
+ключи MST, это только направление для исследования.
+
+Оригинальный TAR и данные игры в LDPlayer остаются нетронутыми.
+До правки видимости `BraveFrontier_Assets` на Private никаких
+оригинальных ресурсов не загружать в репозиторий; соблюдать права
+на распространение даже внутри приватного GitHub.
