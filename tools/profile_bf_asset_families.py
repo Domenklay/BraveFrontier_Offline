@@ -31,7 +31,7 @@ PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 SAM_RE = re.compile(r"battleeffect", re.I)
 PLIST_START = b"<?xml"
 SUFFIXES = ("sam", "png", "csv", "plist", "mp3", "dat")
-MST_ENCRYPTED_NAME = re.compile(r"^Ver\\d+_[A-Za-z0-9]{8}(?:_[A-Za-z0-9_-]+)?\\.dat$", re.I)
+MST_ENCRYPTED_NAME = re.compile(r"^Ver\d+_[A-Za-z0-9]{8}(?:_[A-Za-z0-9_-]+)?\.dat$", re.I)
 
 def classify_png(head: bytes) -> str:
     if head.startswith(PNG_MAGIC):
