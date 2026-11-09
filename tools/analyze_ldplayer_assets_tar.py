@@ -48,12 +48,20 @@ def magic_format(head: bytes) -> str:
     if head.lstrip()[:1] in (b"{", b"["): return "JSON-like"
     return "unknown"
 
+SAFE_FOLDER_LABELS = {
+    "files", "data", "res", "resource", "resources", "content", "assets",
+    "asset", "download", "downloads", "cache", "images", "image",
+    "texture", "textures", "unit", "units", "battle", "character",
+    "characters", "sprite", "sprites", "animation", "animations", "audio",
+    "sound", "music", "master", "mst", "table", "tables", "packs",
+    "pack", "ui", "event", "events", "scenario", "scripts", "game"
+}
+
 def safe_label(segment: str) -> str:
     """Don't expose unique usernames, paths, IDs, or credential-like names."""
-    if (not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{0,29}", segment)
-        or any(word in segment.lower() for word in PRIVATE_TOKENS)):
+    if segment.lower() not in SAFE_FOLDER_LABELS:
         return "[other]"
-    return segment
+    return segment.lower()
 
 def private_name(name: str) -> bool:
     parts = [part.lower() for part in PurePosixPath(name).parts]
