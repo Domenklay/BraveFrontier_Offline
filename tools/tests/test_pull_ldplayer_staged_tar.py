@@ -17,7 +17,7 @@ def make_valid_tar(path):
         for name, data in (
             ("./sprites/001.webp", b"RIFF"+b"\0"*120+b"WEBP"),
             ("./sprites/002.webp", b"\xff\xd8\xff"+b"image"),
-            ("./game/data/003.bin", b"\0\xffpayload"),
+            ("./game/data/003.bin", b"\0" * (11 * 1024 * 1024)),
         ):
             info = tarfile.TarInfo(name)
             info.size = len(data)
