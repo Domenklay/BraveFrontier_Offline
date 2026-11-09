@@ -173,3 +173,29 @@ Settings → General → Danger Zone → Change repository visibility.
 Даже приватность GitHub не даёт дополнительных прав на распространение
 чужих игровых ресурсов. Сначала отбираем нужные файлы и убеждаемся,
 что в них нет личных данных.
+
+
+## Анализ компонентов анимации (без распаковки)
+
+После первичного отчёта по ~71 тыс. файлов используйте второй,
+более предметный анализатор анимаций из Brave Frontier:
+
+```powershell
+cd C:\BF_Project
+git pull --ff-only
+
+python tools/profile_bf_asset_families.py "C:\BF_GameDump\bf-private-staged.tar" --output "C:\BF_GameDump\bf-animation-summary.json"
+```
+
+Отчёт учитывает:
+- `unit_anime_<ID>.png`: исходный спрайт-лист юнита;
+- `unit_cgg_<ID>.csv`: композиции кадров;
+- `unit_idle_cgs_<ID>.csv`, `unit_atk_cgs_<ID>.csv`, `unit_move_cgs_<ID>.csv`: последовательности;
+- `*.sam` и изображения вида `<stem>_<W>x<H>.png`;
+- сигнатуры PNG, PNG с заголовком по смещению, сжатые и неизвестные PNG-именованные файлы;
+- вероятные `*_mst.csv` по списку обязательных серверных таблиц (не равнозначны готовым JSON).
+
+Используются только статистические агрегаты, без ID персонажей,
+файловых имён и приватных данных. TAR не распаковывается и не передаётся.
+Описание форматов и принципы анимации можно сверить с
+`BluuArc/BFFrameAnimator` и `iammathew/SAJSON` на GitHub.
