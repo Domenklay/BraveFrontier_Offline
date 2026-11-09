@@ -30,7 +30,8 @@ EFFECT_SHEET = re.compile(r"^(.*)_([1-9]\d{0,4})x([1-9]\d{0,4})\.png$", re.I)
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 SAM_RE = re.compile(r"battleeffect", re.I)
 PLIST_START = b"<?xml"
-SUFFIXES = ("sam", "png", "csv", "plist", "mp3")
+SUFFIXES = ("sam", "png", "csv", "plist", "mp3", "dat")
+MST_ENCRYPTED_NAME = re.compile(r"^Ver\\d+_[A-Za-z0-9]{8}(?:_[A-Za-z0-9_-]+)?\\.dat$", re.I)
 
 def classify_png(head: bytes) -> str:
     if head.startswith(PNG_MAGIC):
@@ -75,6 +76,8 @@ def csv_type(head: bytes) -> str:
 def scan(path: Path, mst: set[str]) -> dict:
     file_ext = Counter()
     png_types = Counter()
+    weird_png_prefixes = Counter()
+    mst_dat_names = 0
     csv_types = Counter()
     plist_types = Counter()
     animation = Counter()
@@ -118,6 +121,8 @@ def scan(path: Path, mst: set[str]) -> dict:
                 png_effect_bases.add(match.group(1))
             if lower.endswith(".csv") and lower in mst:
                 mst_csv_names.add(lower)
+            if ext == "dat" and MST_ENCRYPTED_NAME.fullmatch(lower):
+                mst_dat_names += 1
             if ext not in SUFFIXES:
                 continue
             stream=tar.extractfile(entry)
@@ -126,7 +131,11 @@ def scan(path: Path, mst: set[str]) -> dict:
             with stream:
                 head=stream.read(2048)
             if ext=="png":
-                png_types[classify_png(head)]+=1
+                category = classify_png(head)
+                png_types[category] += 1
+                if category == "unrecognized PNG-named data":
+                    # Group unknown headers, never print names, contents or IDs.
+                    weird_png_prefixes[head[:4].hex()] += 1
             elif ext=="csv":
                 csv_types[csv_type(head)]+=1
             elif ext=="plist":
@@ -145,6 +154,10 @@ def scan(path: Path, mst: set[str]) -> dict:
         "skipped_sensitive_or_unsafe_names":ignored,
         "selected_extension_counts":{k:file_ext[k] for k in sorted(SUFFIXES)},
         "png_header_breakdown":dict(png_types.most_common()),
+        "unknown_png_top_four_byte_prefixes": [
+            {"hex":hexprefix, "count":count}
+            for hexprefix,count in weird_png_prefixes.most_common(12)
+        ],
         "csv_content_breakdown":dict(csv_types.most_common()),
         "plist_format_breakdown":dict(plist_types.most_common()),
         "unit_animation_filenames":dict(animation.most_common()),
@@ -156,6 +169,7 @@ def scan(path: Path, mst: set[str]) -> dict:
         "sam_files_unique_stems":len(sam_names),
         "sam_stems_with_dimension_suffixed_png":sam_paired,
         "possible_mst_csv_by_name":len(mst_csv_names),
+        "versioned_encrypted_mst_like_dat_names":mst_dat_names,
         "mst_total_required":len(mst),
         "notes":[
             "Only naming and file header heuristics: animation playback has not been tested.",
